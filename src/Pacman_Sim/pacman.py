@@ -1,10 +1,13 @@
-from GridMDP_PM import GridMDP, orientations, turn_right, turn_left, NORTH, EAST, SOUTH, WEST
-import time
-import random
-import numpy as np
-import matplotlib.patches as patches
-from copy import deepcopy
 import math
+import random
+import time
+from copy import deepcopy
+from Robot_Control.Robot import Robot
+
+import matplotlib.patches as patches
+
+from Pacman_Sim.GridMDP_PM import GridMDP, orientations, NORTH, EAST, SOUTH, WEST
+
 #from playsound import playsound
 
 
@@ -26,20 +29,20 @@ pacman_mouth = 0
 
 def DrawPacman(s, a):
     global pacman_face, pacman_mouth
-    
+
     pacman_face = plt.Circle((s[0]*CSTEP+CSTEP/2, s[1]*RSTEP+RSTEP/2), radius=RSTEP/4, ec='black', fc='yellow', zorder=2)
-    pacman_mouth = patches.Wedge((s[0]*CSTEP+CSTEP/2, s[1]*RSTEP+RSTEP/2), RSTEP/4, (a*90)-20.0, (a*90)+20.0, fc='black', zorder=2 )        
+    pacman_mouth = patches.Wedge((s[0]*CSTEP+CSTEP/2, s[1]*RSTEP+RSTEP/2), RSTEP/4, (a*90)-20.0, (a*90)+20.0, fc='black', zorder=2 )
     plt.gca().add_patch(pacman_face)
     plt.gca().add_patch(pacman_mouth)
-    
+
 def ErasePacman(s):
     pacman_face.remove()
-    pacman_mouth.remove()    
+    pacman_mouth.remove()
 
 def DrawDot(s):
     dot_face = plt.Circle((s[0]*CSTEP+CSTEP/2, s[1]*RSTEP+RSTEP/2.0), radius=RSTEP/32, ec='white', fc='white', zorder=2)
     plt.gca().add_patch(dot_face)
-    
+
 def EraseDot(s):
     dot_face = plt.Circle((s[0]*CSTEP+CSTEP/2, s[1]*RSTEP+RSTEP/2), radius=RSTEP/4, ec='k', fc='k', zorder=2)
     plt.gca().add_patch(dot_face)
@@ -58,7 +61,7 @@ def DrawGhost(s, a):
     plt.gca().add_patch(left_eye)
     plt.gca().add_patch(right_eye)
     plt.gca().add_patch(rectangle)
-    
+
 def EraseGhost(s, dotgrid):
     head.remove()
     left_eye.remove()
@@ -90,7 +93,7 @@ def FoodDetection(s, dotgrid):
     input_state = s
     if ( dotgrid[s[1]][s[0]] == 1.0 ):
         return 1.0
-       
+
     # check N
     action = None
     ncount = 1
@@ -105,7 +108,7 @@ def FoodDetection(s, dotgrid):
                 action = NORTH
         else:
             sn = gridworld.go(s, orientations[NORTH])
-        
+
     # check E
     ecount = 1
     sn = gridworld.go(input_state, orientations[EAST])
@@ -118,7 +121,7 @@ def FoodDetection(s, dotgrid):
                 action = EAST
         else:
             sn = gridworld.go(s, orientations[EAST])
-    
+
     # check S
     scount = 1
     sn = gridworld.go(input_state, orientations[SOUTH])
@@ -131,7 +134,7 @@ def FoodDetection(s, dotgrid):
                 action = SOUTH
         else:
             sn = gridworld.go(s, orientations[SOUTH])
-        
+
     # check W
     wcount = 1
     sn = gridworld.go(input_state, orientations[WEST])
@@ -144,7 +147,7 @@ def FoodDetection(s, dotgrid):
                 action = WEST
         else:
             sn = gridworld.go(s, orientations[WEST])
-    
+
     return 1.0/(min_distance*min_distance)
 
 def GhostDetection(s,gs):
@@ -165,7 +168,7 @@ def GhostDetection(s,gs):
         return 1.0/(-xdiff)
     else:
         return 0.0   #1.0/(math.inf)
-    
+
 
 
 #=========================================================================
@@ -196,31 +199,31 @@ weights.append((w1, w2))
 score_list = []
 
 # reward for current state
-reward = 0 
+reward = 0
 
 i = 0
 robot = Robot()
-while i in range(10):    
+while i in range(10):
     plt = gridworld.DrawGrid( gridworld )
     plt.gcf().canvas.draw()
     plt.gcf().canvas.flush_events()
 
     #time.sleep(1)    
-    
+
     s = (0,0)   # pacman state
     gs = (2,2)  # ghost state
     term = False
     DrawPacman(s,0)
     dot_count = DrawDots()
-    dotgrid = deepcopy(gridworld.grid) 
-    DrawGhosts(gs,0) 
+    dotgrid = deepcopy(gridworld.grid)
+    DrawGhosts(gs,0)
     score = 0
-    
+
     while not term:
         if i >=4:
             time.sleep(0.0)
         reward = 0
-        
+
         #---- pacman decides on his action
         if (w1 == w2 == 0.0) or i < 4: #if weights 0 or if first four turns
             a = random.randint(0,3)
@@ -233,7 +236,7 @@ while i in range(10):
                 if (df != 0.0) or (dg != 0.0):
                     QN = w1 * df + w2 * dg
                     print("QN= %f" % (QN))
-            
+
             sE = gridworld.go(s, orientations[EAST])
             if sE != s:
                 df = FoodDetection(sE, dotgrid)
@@ -242,7 +245,7 @@ while i in range(10):
                 if (df != 0.0) or (dg != 0.0):
                     QE = w1 * df + w2 * dg
                     print("QE= %f" % (QE))
-            
+
             sS = gridworld.go(s, orientations[SOUTH])
             if sS != s:
                 df = FoodDetection(sS, dotgrid)
@@ -250,7 +253,7 @@ while i in range(10):
                 if (df != 0.0) or (dg != 0.0):
                     QS = w1 * df + w2 * dg
                     print("QS= %f" % (QS))
-            
+
             sW = gridworld.go(s, orientations[WEST])
             if sW != s:
                 df = FoodDetection(sW, dotgrid)
@@ -258,7 +261,7 @@ while i in range(10):
                 if (df != 0.0) or (dg != 0.0):
                     QW = w1 * df + w2 * dg
                     print("QW= %f" % (QW))
-            
+
             list = [QE, QN, QW, QS]
             print(list)
             lmax = max(list)
@@ -267,24 +270,24 @@ while i in range(10):
             else:
                 a = random.randint(0,3)
 
-        
+
         #---- update and draw pacman
         ErasePacman(s)
         s = gridworld.go(s, orientations[a])
         EraseDot(s)
-        DrawPacman(s,a)                            
+        DrawPacman(s,a)
 
 #        #=======================MOVE ROBOT (possible object)====================
-#        
+#
 #        #determine move
 
-         robot.move(a)
-         while robot.isMoving:
-            print("Robot is moving...")
-           
+        print("Robot is moving...")
+        robot.move(a)
+        print("Done")
+
         #---- check for food
         df = FoodDetection(s, dotgrid)
-            
+
         #---- check for ghosts
         dg = GhostDetection(s, gs)
 
@@ -294,31 +297,31 @@ while i in range(10):
             dot_count = dot_count - 1
             score = score + 10
             reward = 100
-                
-        if ( dot_count == 0 ):        
-            term = True                     
-            
+
+        if ( dot_count == 0 ):
+            term = True
+
         #---- update and draw ghosts
         ga = random.randint(0,3)   # ghost action
         EraseGhosts(gs, dotgrid)
         gs = gridworld.go(gs, orientations[ga])
-        DrawGhosts(gs,ga)                     
-                             
-        if ( gs == s ):        
+        DrawGhosts(gs,ga)
+
+        if ( gs == s ):
             term = True
             reward = -500
-        
+
         #---- use feature values to compute expected Q value
         Q = w1 * (df) + w2 * (dg)
-        
+
         #---- update weights
         if ( not math.isnan(df) and not math.isnan(dg)):
             w1 = w1 + alpha * (reward - Q) * (df)
-            w2 = w2 + alpha * (reward - Q) * (dg)            
-                        
+            w2 = w2 + alpha * (reward - Q) * (dg)
+
         csfont = {'fontname':'Comic Sans MS'}
-        plt.suptitle('EPISODE: %d   SCORE: %d' % (i,score), color='white', fontsize=24, **csfont, fontweight='bold') 
-        plt.title('w1 = %f   w2 = %f' % (w1,w2), color='white', fontsize=24, **csfont, fontweight='bold') 
+        plt.suptitle('EPISODE: %d   SCORE: %d' % (i,score), color='white', fontsize=24, **csfont, fontweight='bold')
+        plt.title('w1 = %f   w2 = %f' % (w1,w2), color='white', fontsize=24, **csfont, fontweight='bold')
         plt.gcf().canvas.draw()
         plt.gcf().canvas.flush_events()
 #        if ( gs == s ):        
@@ -326,12 +329,12 @@ while i in range(10):
         #else:
             #playsound('C:\\Users\\david.claveau\\Documents\\pacman_chomp.wav')
 
-                        
+
     weights.append((w1, w2))
     score_list.append(score)
     plt.close()
     i = i + 1
-    
+
 
 plt = gridworld.DrawGrid( gridworld )
 dot_count = DrawDots()
@@ -351,6 +354,6 @@ plt.gcf().canvas.flush_events()
 
 
 
-time.sleep(3)    
+time.sleep(3)
 plt.close()
 

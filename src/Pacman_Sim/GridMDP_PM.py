@@ -1,10 +1,8 @@
 import operator
-from MDP4 import MDP
-import numpy as np
+
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch
-import colorsys
-from math import log
+
+from Pacman_Sim.MDP4 import MDP
 
 
 def if_(test, result, alternative):
