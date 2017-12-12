@@ -1,4 +1,4 @@
-from Robot_Control.scanner import Scanner
+from scanner import Scanner
 import serial
 import os
 # -*- coding: utf-8 -*-
@@ -12,9 +12,9 @@ class Robot:
     ORIENTATIONS    = ['east','north', 'west', 'south']
     GET_ORIENTATION = lambda x : Robot.ORIENTATIONS.index(x)
 
-    TURN_CMD = lambda x: bytes("TURN %s;" % x)
-    MOVE_CMD = lambda x: bytes("MOVE %s;" % x)
-    CONFIRM  = lambda x: bytes("CONF %s" % x)
+    TURN_CMD = lambda x: bytes("TURN %s;" % x, 'utf-8')
+    MOVE_CMD = lambda x: bytes("MOVE %s;" % x, 'utf-8')
+    CONFIRM  = lambda x: bytes("CONF %s" % x, 'utf-8')
 
     def __init__(self):
         ACM_Port = 0
@@ -22,7 +22,7 @@ class Robot:
             ACM_Port += 1
 
         self.scanner = Scanner()
-        self.ser = serial.Serial('/dev/ttyACM%d' % ACM_Port, 9600, parity=serial.PARITY_EVEN)
+        self.ser = serial.Serial('/dev/ttyACM%d' % ACM_Port, 9600)
         self.orientation = Robot.GET_ORIENTATION('north')
         self.isMoving    = False
         self.position    = (0,0)
@@ -55,11 +55,10 @@ class Robot:
         # TODO
         # Measure front and back obstacles
 
-
         # Move forward
         cmd = Robot.MOVE_CMD(1)
         self.ser.write(cmd)
-        resp = self.ser.read_all().split(';')
+        resp = str(self.ser.read_all()).split(';')
 
         if len(resp) > 1:
             if resp[0] != cmd[:-1] or resp[1] != Robot.CONFIRM(cmd)[:-1]:
@@ -72,6 +71,10 @@ class Robot:
         # Assert that movement has occured
 
         isMoving = False
+
+if __name__ == '__main__':
+    r = Robot()
+    r.move(1)
         
 
 

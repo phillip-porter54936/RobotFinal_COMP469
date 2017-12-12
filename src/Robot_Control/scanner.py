@@ -1,7 +1,6 @@
 # Feed angle distance pairs to arduino
 
 import os
-import time
 from sweeppy import Sweep
 from collections import deque
 import threading
